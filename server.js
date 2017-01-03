@@ -1,8 +1,12 @@
 'use strict';
 
 const Hapi = require('hapi');
+const Boom = require('boom');
 const mongojs = require('mongojs');
 const Relish = require('relish')();
+const JWT = require('jsonwebtoken');
+const fs = require('fs');
+const secret = fs.readFileSync('private.key');
 
 // Create a server with a host and port
 const server = new Hapi.Server();
@@ -18,7 +22,7 @@ server.connection({
 
 server.app.db = mongojs('hapi-rest-mongo', ['assessments', 'participants', 'users']);
 
-server.register([  
+server.register([
   require('./routes/assessments'),
   require('./routes/participants'),
   require('./routes/users')
@@ -26,8 +30,30 @@ server.register([
   if (err) {
     throw err;
   }
+  
+  const authScheme = function (server, options) {
+      return {
+          authenticate: function (request, reply) {
+              const authorization = request.headers.authorization;
+              JWT.verify(authorization, secret, function(err, decoded) {
+                  if (err) {
+                      return reply(Boom.wrap(err, 401));
+                  }
+                  
+                  return reply.continue({
+                    credentials: {
+                      // TODO: how does this object get used by the response?
+                    }
+                  });
+              });
+          }
+      };
+  };
 
-  // Start the server
+  server.auth.scheme('jwt', authScheme);
+  server.auth.strategy('default', 'jwt');
+  server.auth.default('default');
+
   server.start((err) => {
     console.log('Server running at:', server.info.uri);
   });

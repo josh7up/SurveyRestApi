@@ -24,4 +24,4 @@ read -r -d '' JSON <<EOF
 }
 EOF
 
-curl -H "Content-Type: application/json" -X POST -d "$JSON" http://0.0.0.0:8080/assessments
+curl -H "Content-Type: application/json" -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXJ2ZXkiLCJpYXQiOjE0ODM0ODY3NDR9.rQWGneSF44tRd5QDodAlkDabafE5Nek3ydJDX4ZRVf8" -X POST -d "$JSON" http://0.0.0.0:8080/assessments

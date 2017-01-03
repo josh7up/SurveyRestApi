@@ -72,6 +72,7 @@ exports.register = function(server, options, next) {
             });
         },
         config: {
+            auth: false,
             validate: {
                 payload: {
                     username: Joi.string().min(4).max(100).required(),
@@ -121,6 +122,7 @@ exports.register = function(server, options, next) {
             });
         },
         config: {
+            auth: false,
             validate: {
                 payload: {
                     username: Joi.string().min(4).max(100).required(),
