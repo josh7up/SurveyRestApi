@@ -1,5 +1,6 @@
 #!/bin/bash
 
-rm data/mongod.lock
+mkdir mongo
+rm mongo/mongod.lock
 ./mongod &
 nodemon server.js
