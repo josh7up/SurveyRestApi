@@ -19,7 +19,7 @@ exports.register = function(server, options, next) {
         handler: function(request, reply) {
             db.users.find((err, docs) => {
                 if (err) {
-                    return reply(Boom.wrap(err, 'Internal MongoDB error'));
+                    return reply(Boom.wrap(err, 'Error retrieving users'));
                 }
                 reply(docs);
             });
@@ -54,10 +54,9 @@ exports.register = function(server, options, next) {
                         return reply(Boom.wrap(err, 400));
                     }
                     
-                    var payload = {
-                        iss: 'survey'
-                    };
-                    JWT.sign(payload, process.env.JWT_KEY, { algorithm: 'HS256' }, function(err, token) {
+                    JWT.sign({
+                        username: user.username
+                    }, process.env.JWT_KEY, { algorithm: 'HS256', issuer: 'survey' }, function(err, token) {
                         var jwtResponse = {
                             username: user.username,
                             token: token
@@ -100,18 +99,13 @@ exports.register = function(server, options, next) {
                         return reply(Boom.wrap(err, 400));
                     }
                     
-                    var payload = {
-                        iss: 'survey'
-                    };
-                    
-                    JWT.sign(payload, secret, { algorithm: 'HS256' }, function(err, token) {
+                    JWT.sign({
+                        username: user.username
+                    }, process.env.JWT_KEY, { algorithm: 'HS256', issuer: 'survey' }, function(err, token) {
                         var jwtResponse = {
                             username: user.username,
                             token: token
                         };
-                        /*
-                         * TODO - does the JWT token need to be stored in the database?
-                         */
                         reply(jwtResponse);
                     });
                 });
@@ -123,30 +117,6 @@ exports.register = function(server, options, next) {
                 payload: {
                     username: Joi.string().min(4).max(100).required(),
                     password: Joi.string().min(8).max(200).required()
-                }
-            }
-        }
-    });
-
-    server.route({
-        method: 'POST',
-        path: '/users/jwttest',
-        handler: function(request, reply) {
-            const token = request.headers['x-access-token'];
-            JWT.verify(token, secret, function(err, decoded) {
-                if (err) {
-                    return reply(Boom.wrap(err, 400));
-                }
-                reply(decoded);
-            });
-        },
-        config: {
-            validate: {
-                options: {
-                    allowUnknown: true
-                },
-                headers: {
-                    'x-access-token': Joi.string().required()
                 }
             }
         }

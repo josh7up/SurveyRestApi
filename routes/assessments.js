@@ -9,9 +9,9 @@ exports.register = function(server, options, next) {
     const db = server.app.db;
 
     var responseSchema = Joi.object().keys({
-      responseId: Joi.string().required(),
-      responseDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/).required(),
-      values: Joi.array().items()
+        responseId: Joi.string().required(),
+        responseDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/).required(),
+        values: Joi.array().items()
     });
 
     server.route({
@@ -20,6 +20,8 @@ exports.register = function(server, options, next) {
         handler: function(request, reply) {
             var params = request.query;
             var query = {};
+            // Only include assessments for the currently authenticated user.
+            query['participant.id'] = request.auth.credentials.username;
             if (params.surveyName) {
                 query.surveyName = params.surveyName;
             }
@@ -37,8 +39,11 @@ exports.register = function(server, options, next) {
         path: '/assessments',
         handler: function(request, reply) {
             const assessment = request.payload;
+            if (!request.auth.credentials.username || request.auth.credentials.username !== assessment.participant.id) {
+                return reply(Boom.forbidden('Assessment data must be posted by the same user that created the data.'));
+            }
+
             assessment._id = uuid.v1();
-            
             assessmentDao.save(db, assessment, function(err) {
                 return reply(Boom.wrap(err, 'Error saving assessment'));
             }, function(result) {
@@ -57,7 +62,7 @@ exports.register = function(server, options, next) {
                     timeoutDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/),
                     participant: Joi.object({
                         id: Joi.string().required()
-                    }),
+                    }).required(),
                     responses: Joi.array().items(responseSchema)
                 }
             }

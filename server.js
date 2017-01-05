@@ -38,10 +38,9 @@ server.register([
                   if (err) {
                       return reply(Boom.wrap(err, 401));
                   }
-                  
                   return reply.continue({
                     credentials: {
-                      // TODO: how does this object get used by the response?
+                        username: decoded.username
                     }
                   });
               });
