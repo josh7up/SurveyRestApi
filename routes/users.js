@@ -5,10 +5,6 @@ const uuid = require('node-uuid');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const JWT = require('jsonwebtoken');
-const fs = require('fs');
-const path = require('path');
-var privateKeyFile = path.join(__dirname, '../private.key');
-const secret = fs.readFileSync(privateKeyFile);
 
 exports.register = function(server, options, next) {
     const db = server.app.db;
@@ -61,7 +57,7 @@ exports.register = function(server, options, next) {
                     var payload = {
                         iss: 'survey'
                     };
-                    JWT.sign(payload, secret, { algorithm: 'HS256' }, function(err, token) {
+                    JWT.sign(payload, process.env.JWT_KEY, { algorithm: 'HS256' }, function(err, token) {
                         var jwtResponse = {
                             username: user.username,
                             token: token

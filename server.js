@@ -1,12 +1,11 @@
 'use strict';
 
+require('dotenv').config();
 const Hapi = require('hapi');
 const Boom = require('boom');
 const mongojs = require('mongojs');
 const Relish = require('relish')();
 const JWT = require('jsonwebtoken');
-const fs = require('fs');
-const secret = fs.readFileSync('private.key');
 
 // Create a server with a host and port
 const server = new Hapi.Server();
@@ -20,7 +19,7 @@ server.connection({
     }
 });
 
-server.app.db = mongojs('hapi-rest-mongo', ['assessments', 'participants', 'users']);
+server.app.db = mongojs('survey', ['assessments', 'participants', 'users']);
 
 server.register([
   require('./routes/assessments'),
@@ -35,7 +34,7 @@ server.register([
       return {
           authenticate: function (request, reply) {
               const authorization = request.headers.authorization;
-              JWT.verify(authorization, secret, function(err, decoded) {
+              JWT.verify(authorization, process.env.JWT_KEY, function(err, decoded) {
                   if (err) {
                       return reply(Boom.wrap(err, 401));
                   }
