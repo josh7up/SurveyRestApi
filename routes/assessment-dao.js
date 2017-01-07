@@ -1,20 +1,28 @@
 var moment = require('moment');
 const dateFormat = "YYYY-MM-DDTHH:mm:ss[Z]";
 
-var prepareForResponse = function(assessment) {
+function toDateForFind(val) {
+    return moment(val).format(dateFormat);
+};
+
+function toDateForSave(val) {
+    return new Date(val);
+}
+
+function convertAssessment(assessment, dateConverter) {
     if (assessment.startDate) {
-        assessment.startDate = moment(assessment.startDate).format(dateFormat);
+        assessment.startDate = dateConverter(assessment.startDate);
     }
     if (assessment.endDate) {
-        assessment.endDate = moment(assessment.endDate).format(dateFormat);
+        assessment.endDate = dateConverter(assessment.endDate);
     }
     if (assessment.timeoutDate) {
-        assessment.timeoutDate = moment(assessment.timeoutDate).format(dateFormat);
+        assessment.timeoutDate = dateConverter(assessment.timeoutDate);
     }
     if (assessment.responses) {
         assessment.responses = assessment.responses.map(function(response, index, array) {
             if (response.responseDate) {
-                response.responseDate = moment(response.responseDate).format(dateFormat);
+                response.responseDate = dateConverter(response.responseDate);
             }
             return response;
         });
@@ -28,7 +36,7 @@ exports.find = function(db, query, callback) {
             callback(err, null);
         } else {
             var mapped = docs.map(function(currentValue, index, array) {
-                return prepareForResponse(currentValue);
+                return convertAssessment(currentValue, toDateForFind);
             });
             callback(null, docs);
         }
@@ -36,30 +44,13 @@ exports.find = function(db, query, callback) {
 };
 
 exports.save = function(db, assessment, callback) {
-    if (assessment.startDate) {
-        assessment.startDate = new Date(assessment.startDate);
-    }
-    if (assessment.endDate) {
-        assessment.endDate = new Date(assessment.endDate);
-    }
-    if (assessment.timeoutDate) {
-        assessment.timeoutDate = new Date(assessment.timeoutDate);
-    }
-    if (assessment.responses) {
-        assessment.responses = assessment.responses.map(function(currentValue, index, array) {
-            if (currentValue.responseDate) {
-                currentValue.responseDate = new Date(currentValue.responseDate);
-            }
-            return currentValue;
-        });
-    }
-    
-    db.assessments.save(assessment, (err, result) => {
+    var assessmentForSave = convertAssessment(assessment, toDateForSave);
+    db.assessments.save(assessmentForSave, (err, result) => {
         if (err) {
             callback(err, null);
         } else {
-            var modifiedAssessment = prepareForResponse(result);
-            callback(null, modifiedAssessment);
+            var assessmentForResponse = convertAssessment(assessment, toDateForFind);
+            callback(null, assessmentForResponse);
         }
     });
 };
