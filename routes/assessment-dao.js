@@ -1,43 +1,38 @@
 var moment = require('moment');
 
-exports.find = function(db, query, errorHandler, successHandler) {
+exports.find = function(db, query, callback) {
+    const dateFormat = "YYYY-MM-DDTHH:mm:ss[Z]";
+    
     db.assessments.find(query, (err, docs) => {
         if (err) {
-            if (errorHandler) {
-                errorHandler(err);
-            }
+            callback(err, null);
         } else {
-            if (successHandler) {
-                var mapped = docs.map(function(currentValue, index, array) {
-                    if (currentValue.startDate) {
-                        currentValue.startDate = moment(currentValue.startDate).format("YYYY-MM-DDTHH:mm:ss[Z]");
-                    }
-                    if (currentValue.endDate) {
-                        currentValue.endDate = moment(currentValue.endDate).format("YYYY-MM-DDTHH:mm:ss[Z]");
-                    }
-                    if (currentValue.timeoutDate) {
-                        currentValue.timeoutDate = moment(currentValue.timeoutDate).format("YYYY-MM-DDTHH:mm:ss[Z]");
-                    }
-                    if (currentValue.responses) {
-                        currentValue.responses = currentValue.responses.map(function(response, index, array) {
-                            if (response.responseDate) {
-                                response.responseDate = moment(response.responseDate).format("YYYY-MM-DDTHH:mm:ss[Z]");
-                            }
-                            return response;
-                        });
-                    }
-                    return currentValue;
-                });
-                console.log(mapped);
-                successHandler(docs);
-            }
+            var mapped = docs.map(function(currentValue, index, array) {
+                if (currentValue.startDate) {
+                    currentValue.startDate = moment(currentValue.startDate).format(dateFormat);
+                }
+                if (currentValue.endDate) {
+                    currentValue.endDate = moment(currentValue.endDate).format(dateFormat);
+                }
+                if (currentValue.timeoutDate) {
+                    currentValue.timeoutDate = moment(currentValue.timeoutDate).format(dateFormat);
+                }
+                if (currentValue.responses) {
+                    currentValue.responses = currentValue.responses.map(function(response, index, array) {
+                        if (response.responseDate) {
+                            response.responseDate = moment(response.responseDate).format(dateFormat);
+                        }
+                        return response;
+                    });
+                }
+                return currentValue;
+            });
+            callback(null, docs);
         }
     });
 };
 
-exports.save = function(db, assessment, errorHandler, successHandler) {
-    console.log(assessment);
-    
+exports.save = function(db, assessment, callback) {
     if (assessment.startDate) {
         assessment.startDate = new Date(assessment.startDate);
     }
@@ -56,19 +51,11 @@ exports.save = function(db, assessment, errorHandler, successHandler) {
         });
     }
     
-    console.log("before mapped...");
-    console.log(assessment);
-    console.log('after mapped....')
-    
     db.assessments.save(assessment, (err, result) => {
         if (err) {
-            if (errorHandler) {
-                errorHandler(err);
-            }
+            callback(err, null);
         } else {
-            if (successHandler) {
-                successHandler(result);
-            }
+            callback(null, result);
         }
     });
 };

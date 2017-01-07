@@ -7,10 +7,11 @@ const assessmentDao = require('./assessment-dao.js');
 
 exports.register = function(server, options, next) {
     const db = server.app.db;
+    const dateRegex = /\b^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\b/;
 
     var responseSchema = Joi.object().keys({
         responseId: Joi.string().required(),
-        responseDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/).required(),
+        responseDate: Joi.string().regex(dateRegex).required(),
         values: Joi.array().items()
     });
 
@@ -26,10 +27,11 @@ exports.register = function(server, options, next) {
                 query.surveyName = params.surveyName;
             }
             
-            assessmentDao.find(db, query, function(err) {
-                return reply(Boom.wrap(err, 'Internal MongoDB error'));
-            }, function(docs) {
-                reply(docs);
+            assessmentDao.find(db, query, function(err, result) {
+                if (err) {
+                    return reply(Boom.wrap(err, 'Internal MongoDB error'));
+                }
+                reply(result);
             });
         }
     });
@@ -44,9 +46,10 @@ exports.register = function(server, options, next) {
             }
 
             assessment._id = uuid.v1();
-            assessmentDao.save(db, assessment, function(err) {
-                return reply(Boom.wrap(err, 'Error saving assessment'));
-            }, function(result) {
+            assessmentDao.save(db, assessment, function(err, result) {
+                if (err) {
+                    return reply(Boom.wrap(err, 'Error saving assessment'));
+                }
                 reply(result);
             });
         },
@@ -57,9 +60,9 @@ exports.register = function(server, options, next) {
                 },
                 payload: {
                     surveyName: Joi.string().min(4).max(50).required(),
-                    startDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/).required(),
-                    endDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/).required(),
-                    timeoutDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/),
+                    startDate: Joi.string().regex(dateRegex).required(),
+                    endDate: Joi.string().regex(dateRegex).required(),
+                    timeoutDate: Joi.string().regex(dateRegex),
                     participant: Joi.object({
                         id: Joi.string().required()
                     }).required(),
