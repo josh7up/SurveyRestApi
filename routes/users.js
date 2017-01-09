@@ -6,6 +6,22 @@ const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const JWT = require('jsonwebtoken');
 
+var jwtSign = function(username, callback) {
+    JWT.sign({
+        username: username
+    }, process.env.JWT_KEY, { algorithm: 'HS256', issuer: 'survey' }, function(err, token) {
+        if (err) {
+            callback(err, null);
+        } else {
+            var jwtResponse = {
+                username: username,
+                token: token
+            };
+            callback(null, jwtResponse);
+        }
+    });
+};
+
 exports.register = function(server, options, next) {
     const db = server.app.db;
     
@@ -54,14 +70,11 @@ exports.register = function(server, options, next) {
                         return reply(Boom.wrap(err, 400));
                     }
                     
-                    JWT.sign({
-                        username: user.username
-                    }, process.env.JWT_KEY, { algorithm: 'HS256', issuer: 'survey' }, function(err, token) {
-                        var jwtResponse = {
-                            username: user.username,
-                            token: token
-                        };
-                        reply(jwtResponse);
+                    jwtSign(user.username, function(err, result) {
+                        if (err) {
+                            return reply(Boom.wrap(err, 400));
+                        }
+                        return reply(result);
                     });
                 });
             });
@@ -99,14 +112,11 @@ exports.register = function(server, options, next) {
                         return reply(Boom.wrap(err, 400));
                     }
                     
-                    JWT.sign({
-                        username: user.username
-                    }, process.env.JWT_KEY, { algorithm: 'HS256', issuer: 'survey' }, function(err, token) {
-                        var jwtResponse = {
-                            username: user.username,
-                            token: token
-                        };
-                        reply(jwtResponse);
+                    jwtSign(user.username, function(err, result) {
+                        if (err) {
+                            return reply(Boom.wrap(err, 400));
+                        }
+                        return reply(result);
                     });
                 });
             });

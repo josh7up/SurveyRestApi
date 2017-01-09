@@ -19,12 +19,12 @@ server.connection({
     }
 });
 
-server.app.db = mongojs('survey', ['assessments', 'participants', 'users']);
+server.app.db = mongojs('survey', ['assessments', 'users', 'surveyDescriptions']);
 
 server.register([
   require('./routes/assessments'),
-  require('./routes/participants'),
-  require('./routes/users')
+  require('./routes/users'),
+  require('./routes/datasets')
 ], (err) => {
   if (err) {
     throw err;
