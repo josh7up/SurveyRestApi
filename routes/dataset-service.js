@@ -29,13 +29,15 @@ module.exports = (function() {
             if (err) {
                 callback(err, null);
             } else {
-                var mapped = [];
+                var fields = [];
                 if (docs[0] && docs[0].surveys) {
-                    mapped = docs[0].surveys.screens.map(function(item) {
-                        return item.id;
+                    docs[0].surveys.screens.forEach(function(item) {
+                        fields.push(item.id);
+                        fields.push(item.id + '_date');
+                        fields.push(item.id + '_time');
                     });
                 }
-                callback(null, mapped);
+                callback(null, fields);
             }
         });
     }

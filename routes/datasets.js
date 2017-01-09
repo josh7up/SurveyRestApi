@@ -57,7 +57,11 @@ exports.register = function(server, options, next) {
                                         return convertedValue == NaN ? value : convertedValue;
                                     }).join(',');
                                     
-                                    // TODO - add a date and a time row mapping for each response.
+                                    // Add a date and a time row mapping for each response.
+                                    if (response.responseDate) {
+                                        row[response.responseId + '_date'] = moment(response.responseDate).format(dateFormat);
+                                        row[response.responseId + '_time'] = moment(response.responseDate).format(timeFormat);
+                                    }
                                 });
                             }
                             
