@@ -25,57 +25,17 @@ exports.register = function(server, options, next) {
                 query.surveyName = params.surveyName;
             }
             
-            assessmentDao.find(db, query, function(err, assessment) {
+            assessmentDao.find(db, query, function(err, assessments) {
                 if (err) {
                     return reply(Boom.wrap(err, 'Internal MongoDB error'));
                 }
                 
-                try {
-                    const fixedFields = ['participantId', 'surveyName', 'startDate', 'startTime', 'endDate', 'endTime', 'timeoutDate', 'timeoutTime'];
-                    datasetService.getFields(db, params.surveyName, function(err, dynamicFields) {
-                        if (err) {
-                            return reply(Boom.wrap(err, 400));
-                        }
-                        
-                        var allFields = fixedFields.concat(dynamicFields);
-                        var dataset = assessment.map(function(item) {
-                            var row = {};
-                            row.participantId = item.participant ? item.participant.id : '';
-                            row.surveyName = item.surveyName;
-                            row.startDate = item.startDate ? moment(item.startDate).format(dateFormat) : '';
-                            row.startTime = item.startDate ? moment(item.startDate).format(timeFormat) : '';
-                            row.endDate = item.endDate ? moment(item.endDate).format(dateFormat) : '';
-                            row.endTime = item.endDate ? moment(item.endDate).format(timeFormat) : '';
-                            row.timeoutDate = item.timeoutDate ? moment(item.timeoutDate).format(dateFormat) : '';
-                            row.timeoutTime = item.timeoutTime ? moment(item.timeoutDate).format(timeFormat) : '';
-                            
-                            // Collect assessment data for each dynamic field.
-                            if (item.responses) {
-                                item.responses.forEach(function(response) {
-                                    row[response.responseId] = response.values.map(function(value) {
-                                        var convertedValue = parseInt(value);
-                                        return convertedValue == NaN ? value : convertedValue;
-                                    }).join(',');
-                                    
-                                    // Add a date and a time row mapping for each response.
-                                    if (response.responseDate) {
-                                        row[response.responseId + '_date'] = moment(response.responseDate).format(dateFormat);
-                                        row[response.responseId + '_time'] = moment(response.responseDate).format(timeFormat);
-                                    }
-                                });
-                            }
-                            
-                            return row;
-                        });
-                        
-                        var result = json2csv({ data: dataset, fields: allFields });
-                        reply(result);
-                    });
-                } catch (err) {
-                    // Errors are thrown for bad options, or if the data is empty and no fields are provided. 
-                    // Be sure to provide fields if it is possible that your data array will be empty. 
-                    console.error(err);
-                }
+                datasetService.getCsv(db, params.surveyName, assessments, function(err, csv) {
+                    if (err) {
+                        return reply(Boom.wrap(err, 400));
+                    }
+                    return reply(csv);
+                });
             });
         }
     });
