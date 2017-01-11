@@ -1,14 +1,17 @@
 'use strict';
 
+const Promise = require('bluebird');
 const moment = require('moment');
 const json2csv = require('json2csv');
 const dateFormat = 'YYYY-MM-DD';
 const timeFormat = 'HH:mm:ss';
+const uuid = require('node-uuid');
+const fs = Promise.promisifyAll(require('fs'));
 
 module.exports = (function() {
     const fixedFields = ['participantId', 'surveyName', 'startDate', 'startTime', 'endDate', 'endTime', 'timeoutDate', 'timeoutTime'];
     
-    function getFields(db, surveyName, callback) {
+    function getFields(db, surveyName) {
         var aggregationPipeline = [
             // Convert surveys array to child documents.
             {
@@ -29,29 +32,29 @@ module.exports = (function() {
             }
         ];
         
-        db.surveyDescriptions.aggregate(aggregationPipeline, (err, docs) => {
-            if (err) {
-                callback(err, null);
-            } else {
-                var fields = [];
-                if (docs[0] && docs[0].surveys) {
-                    docs[0].surveys.screens.forEach(function(item) {
-                        fields.push(item.id);
-                        fields.push(item.id + '_date');
-                        fields.push(item.id + '_time');
-                    });
+        return new Promise(function(resolve, reject) {
+            db.surveyTemplates.aggregate(aggregationPipeline, (err, docs) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    var fields = [];
+                    if (docs[0] && docs[0].surveys) {
+                        docs[0].surveys.screens.forEach(function(item) {
+                            fields.push(item.id);
+                            fields.push(item.id + '_date');
+                            fields.push(item.id + '_time');
+                        });
+                    }
+                    resolve(fields);
                 }
-                callback(null, fields);
-            }
+            });
         });
     }
     
-    function getCsv(db, surveyName, assessments, callback) {
-        try {
-            getFields(db, surveyName, function(err, dynamicFields) {
-                if (err) {
-                    callback(err, null);
-                } else {
+    function getCsv(db, surveyName, assessments) {
+        return new Promise(function(resolve, reject) {
+            try {
+                getFields(db, surveyName).then(function(dynamicFields) {
                     var allFields = fixedFields.concat(dynamicFields);
                     var dataset = assessments.map(function(item) {
                         var row = {};
@@ -84,18 +87,27 @@ module.exports = (function() {
                     });
                     
                     var result = json2csv({ data: dataset, fields: allFields });
-                    callback(null, result);
-                }
-            });
-        } catch (err) {
-            // Errors are thrown for bad options, or if the data is empty and no fields are provided. 
-            // Be sure to provide fields if it is possible that your data array will be empty. 
-            callback(err, null)
-        }
+                    resolve(result);
+                })
+            } catch (err) {
+                // json2csv Errors are thrown for bad options, or if the data is empty and no fields are provided. 
+                // Be sure to provide fields if it is possible that your data array will be empty. 
+                reject(err);
+            }
+        });
+    }
+    
+    function saveTemplate(db, filePath) {
+        return fs.readFileAsync(filePath, 'utf8').then(function(data) {
+            const json = JSON.parse(data);
+            json._id = uuid.v1();
+            return db.surveyTemplates.saveAsync(json);
+        });
     }
 
     return {
         getFields: getFields,
-        getCsv: getCsv
+        getCsv: getCsv,
+        saveTemplate: saveTemplate
     };
 }());

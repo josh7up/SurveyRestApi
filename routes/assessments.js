@@ -27,11 +27,10 @@ exports.register = function(server, options, next) {
                 query.surveyName = params.surveyName;
             }
             
-            assessmentDao.find(db, query, function(err, result) {
-                if (err) {
-                    return reply(Boom.wrap(err, 'Internal MongoDB error'));
-                }
-                reply(result);
+            assessmentDao.find(db, query).then(function(result) {
+                return reply(result);
+            }).catch(function(err) {
+                return reply(Boom.wrap(err, 'Error getting assessments'));
             });
         }
     });
@@ -46,11 +45,10 @@ exports.register = function(server, options, next) {
             }
 
             assessment._id = uuid.v1();
-            assessmentDao.save(db, assessment, function(err, result) {
-                if (err) {
-                    return reply(Boom.wrap(err, 'Error saving assessment'));
-                }
-                reply(result);
+            assessmentDao.save(db, assessment).then(function(result) {
+                return reply(result);
+            }).catch(function(err) {
+                return reply(Boom.wrap(err, 'Error saving assessment'));
             });
         },
         config: {

@@ -8,6 +8,7 @@
   "dependencies": {
     "async": "~0.2.8",
     "bcrypt": "^1.0.1",
+    "bluebird": "^3.4.7",
     "boom": "^4.2.0",
     "dotenv": "^2.0.0",
     "express": "~3.2.4",

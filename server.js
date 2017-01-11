@@ -1,6 +1,7 @@
 'use strict';
 
 require('dotenv').config();
+const Promise = require('bluebird');
 const Hapi = require('hapi');
 const Boom = require('boom');
 const mongojs = require('mongojs');
@@ -19,7 +20,13 @@ server.connection({
     }
 });
 
-server.app.db = mongojs('survey', ['assessments', 'users', 'surveyDescriptions']);
+Promise.promisifyAll([
+   require("mongojs/lib/collection"),
+   require("mongojs/lib/database"),
+   require("mongojs/lib/cursor")
+]);
+
+server.app.db = mongojs('survey', ['assessments', 'users', 'surveyTemplates']);
 
 server.register([
   require('./routes/assessments'),

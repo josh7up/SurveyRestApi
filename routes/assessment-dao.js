@@ -1,9 +1,9 @@
 'use strict';
 
-module.exports = (function() {
-    var moment = require('moment');
-    const dateFormat = "YYYY-MM-DDTHH:mm:ss[Z]";
+const moment = require('moment');
+const dateFormat = "YYYY-MM-DDTHH:mm:ss[Z]";
     
+module.exports = (function() {
     function toDateForFind(val) {
         return moment(val).format(dateFormat);
     };
@@ -33,29 +33,37 @@ module.exports = (function() {
         return assessment;
     };
     
-    return {
-        find: function(db, query, callback) {
+    function find(db, query) {
+        return new Promise(function(resolve, reject) {
             db.assessments.find(query, (err, docs) => {
                 if (err) {
-                    callback(err, null);
+                    reject(err);
                 } else {
                     var mapped = docs.map(function(currentValue, index, array) {
                         return convertAssessment(currentValue, toDateForFind);
                     });
-                    callback(null, docs);
+                    resolve(mapped);
                 }
             });
-        },
-        save: function(db, assessment, callback) {
+        });
+    }
+    
+    function save(db, assessment) {
+        return new Promise(function(resolve, reject) {
             var assessmentForSave = convertAssessment(assessment, toDateForSave);
             db.assessments.save(assessmentForSave, (err, result) => {
                 if (err) {
-                    callback(err, null);
+                    reject(err);
                 } else {
                     var assessmentForResponse = convertAssessment(assessment, toDateForFind);
-                    callback(null, assessmentForResponse);
+                    resolve(assessmentForResponse);
                 }
             });
-        }
+        });
+    }
+    
+    return {
+        find: find,
+        save: save
     };
 }());

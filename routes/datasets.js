@@ -1,5 +1,6 @@
 'use strict';
 
+const Promise = require('bluebird');
 const moment = require('moment');
 const Boom = require('boom');
 const uuid = require('node-uuid');
@@ -7,9 +8,9 @@ const Joi = require('joi');
 const json2csv = require('json2csv');
 const assessmentDao = require('./assessment-dao.js');
 const datasetService = require('./dataset-service.js');
+
 const dateFormat = 'YYYY-MM-DD';
 const timeFormat = 'HH:mm:ss';
-const fs = require('fs');
 
 exports.register = function(server, options, next) {
     const db = server.app.db;
@@ -25,40 +26,25 @@ exports.register = function(server, options, next) {
                 query.surveyName = params.surveyName;
             }
             
-            assessmentDao.find(db, query, function(err, assessments) {
-                if (err) {
-                    return reply(Boom.wrap(err, 'Internal MongoDB error'));
-                }
-                
-                datasetService.getCsv(db, params.surveyName, assessments, function(err, csv) {
-                    if (err) {
-                        return reply(Boom.wrap(err, 400));
-                    }
-                    return reply(csv);
-                });
+            assessmentDao.find(db, query).then(function(assessments) {
+                return datasetService.getCsv(db, params.surveyName, assessments);
+            }).then(function(csv) {
+                return reply(csv);
+            }).catch(function(err) {
+                return reply(Boom.wrap(err, 'Error creating dataset'));
             });
         }
     });
     
     server.route({
         method: 'POST',
-        path: '/datasets',
+        path: '/datasets/templates',
         handler: function(request, reply) {
             var file = request.payload.file;
-            fs.readFile(file.path, 'utf8', function (err, data) {
-                if (err) {
-                    return reply(Boom.wrap(err, 400));
-                }
-                
-                const json = JSON.parse(data);
-                json._id = uuid.v1();
-                db.surveyDescriptions.save(json, (err, result) => {
-                    if (err) {
-                        return reply(Boom.wrap(err, 400));
-                    } else {
-                        return reply(json);
-                    }
-                });
+            datasetService.saveTemplate(db, file.path).then(function(result) {
+                return reply(result);
+            }).catch(function(err) {
+                return reply(Boom.wrap(err, 400));
             });
         },
         config: {
@@ -74,11 +60,10 @@ exports.register = function(server, options, next) {
         path: '/datasets/fields',
         handler: function(request, reply) {
             var params = request.query;
-            datasetService.getFields(db, params.surveyName, function(err, fields) {
-                if (err) {
-                    return reply(Boom.wrap(err, 400));
-                }
+            datasetService.getFields(db, params.surveyName).then(function(fields) {
                 return reply(fields);
+            }).catch(function(err) {
+                return reply(Boom.wrap(err, 400));
             });
         }
     });
