@@ -5,6 +5,12 @@ const uuid = require('node-uuid');
 const Joi = require('joi');
 const assessmentDao = require('./assessment-dao.js');
 
+function canPostAssessment(request, assessment) {
+    var requestUsername = request.auth.credentials.username;
+    var assessmentUsername = assessment.participant.id;
+    return request.auth.credentials.isAdmin === true || (requestUsername && requestUsername === assessmentUsername);
+}
+
 exports.register = function(server, options, next) {
     const db = server.app.db;
     const dateRegex = /\b^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\b/;
@@ -21,8 +27,10 @@ exports.register = function(server, options, next) {
         handler: function(request, reply) {
             var params = request.query;
             var query = {};
-            // Only include assessments for the currently authenticated user.
-            query['participant.id'] = request.auth.credentials.username;
+            if (request.auth.credentials.isAdmin !== true) {
+                // Only include assessments for the currently authenticated user.
+                query['participant.id'] = request.auth.credentials.username;
+            }
             if (params.surveyName) {
                 query.surveyName = params.surveyName;
             }
@@ -40,7 +48,7 @@ exports.register = function(server, options, next) {
         path: '/assessments',
         handler: function(request, reply) {
             const assessment = request.payload;
-            if (!request.auth.credentials.username || request.auth.credentials.username !== assessment.participant.id) {
+            if (!canPostAssessment(request, assessment)) {
                 return reply(Boom.forbidden('Assessment data must be posted by the same user that created the data.'));
             }
 

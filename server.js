@@ -45,10 +45,21 @@ server.register([
                   if (err) {
                       return reply(Boom.wrap(err, 401));
                   }
-                  return reply.continue({
-                    credentials: {
-                        username: decoded.username
-                    }
+                  
+                  var credentials = {
+                      username: decoded.username,
+                      isAdmin: false
+                  };
+                  
+                  // If this user has admin rights, update the isAdmin flag accordingly.
+                  server.app.db.users.findOne({ username: decoded.username }, function(err, user) {
+                      if (!err && user.isAdmin === true) {
+                          credentials.isAdmin = true;
+                      }
+                      
+                      return reply.continue({
+                          credentials: credentials
+                      });
                   });
               });
           }

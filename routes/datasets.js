@@ -20,6 +20,10 @@ exports.register = function(server, options, next) {
         method: 'GET',
         path: '/datasets',
         handler: function(request, reply) {
+            if (!request.auth.credentials.isAdmin) {
+                return reply(Boom.unauthorized('Only admins may access this endpoint'));
+            }
+            
             var params = request.query;
             var query = {};
             if (params.surveyName) {
@@ -40,6 +44,10 @@ exports.register = function(server, options, next) {
         method: 'POST',
         path: '/datasets/templates',
         handler: function(request, reply) {
+            if (!request.auth.credentials.isAdmin) {
+                return reply(Boom.unauthorized('Only admins may access this endpoint'));
+            }
+            
             var file = request.payload.file;
             datasetService.saveTemplate(db, file.path).then(function(result) {
                 return reply(result);
@@ -59,6 +67,10 @@ exports.register = function(server, options, next) {
         method: 'GET',
         path: '/datasets/fields',
         handler: function(request, reply) {
+            if (!request.auth.credentials.isAdmin) {
+                return reply(Boom.unauthorized('Only admins may access this endpoint'));
+            }
+            
             var params = request.query;
             datasetService.getFields(db, params.surveyName).then(function(fields) {
                 return reply(fields);
