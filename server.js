@@ -11,8 +11,8 @@ const JWT = require('jsonwebtoken');
 // Create a server with a host and port
 const server = new Hapi.Server();
 server.connection({ 
-    host: '0.0.0.0', 
-    port: 8080,
+    host: process.env.SERVER_HOST, 
+    port: process.env.SERVER_PORT,
     routes: {
         validate: {
           failAction: Relish.failAction
