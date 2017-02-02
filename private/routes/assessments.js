@@ -3,7 +3,8 @@
 const Boom = require('boom');
 const uuid = require('node-uuid');
 const Joi = require('joi');
-const assessmentDao = require('./assessment-dao.js');
+const appRoot = require('app-root-path');
+const assessmentDao = require(appRoot + '/private/services/assessment-dao.js');
 
 function canPostAssessment(request, assessment) {
     var requestUsername = request.auth.credentials.username;

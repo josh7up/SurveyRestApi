@@ -6,6 +6,7 @@
   "repository": "",
   "author": "Mostafa Eweda <mo.eweda@gmail.com>",
   "dependencies": {
+    "app-root-path": "^2.0.1",
     "async": "~0.2.8",
     "bcrypt": "^1.0.1",
     "bluebird": "^3.4.7",

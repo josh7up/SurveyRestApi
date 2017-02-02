@@ -6,8 +6,9 @@ const Boom = require('boom');
 const uuid = require('node-uuid');
 const Joi = require('joi');
 const json2csv = require('json2csv');
-const assessmentDao = require('./assessment-dao.js');
-const datasetService = require('./dataset-service.js');
+const appRoot = require('app-root-path');
+const assessmentDao = require(appRoot + '/private/services/assessment-dao.js');
+const datasetService = require(appRoot + '/private/services/dataset-service.js');
 
 const dateFormat = 'YYYY-MM-DD';
 const timeFormat = 'HH:mm:ss';
@@ -49,6 +50,10 @@ exports.register = function(server, options, next) {
             }
             
             var file = request.payload.file;
+            if (!file) {
+                return reply(Boom.badRequest('file argument be specified'));
+            }
+            
             datasetService.saveTemplate(db, file.path).then(function(result) {
                 return reply(result);
             }).catch(function(err) {

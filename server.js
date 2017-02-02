@@ -29,9 +29,9 @@ Promise.promisifyAll([
 server.app.db = mongojs('survey', ['assessments', 'users', 'surveyTemplates']);
 
 server.register([
-  require('./routes/assessments'),
-  require('./routes/users'),
-  require('./routes/datasets')
+  require('./private/routes/assessments'),
+  require('./private/routes/users'),
+  require('./private/routes/datasets')
 ], (err) => {
   if (err) {
     throw err;
