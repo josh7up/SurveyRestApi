@@ -1,10 +1,10 @@
 {
-  "name": "chat-example",
+  "name": "survey-rest-api",
   "version": "0.0.0",
   "description": "Survey Rest API",
   "main": "server.js",
   "repository": "",
-  "author": "Mostafa Eweda <mo.eweda@gmail.com>",
+  "author": "Josh Feldman",
   "dependencies": {
     "app-root-path": "^2.0.1",
     "async": "~0.2.8",
