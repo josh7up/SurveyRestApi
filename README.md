@@ -10,11 +10,12 @@ A Node.js REST API for survey data. Android client app code that works with this
 
 3) Create a .env file in the root of this project. This is a property file with key-value pairs, and must include the following three properties:
 
+```
     SERVER_HOST=YOUR_SERVER_IP_STRING
     SERVER_PORT=YOUR_SERVER_PORT
     JWT_KEY=YOUR_JWT_SECRET_KEY
-
-   *Note: if you are running on a Cloud9 instance, server host will be "0.0.0.0".*
+```
+    Note: if you are running on a Cloud9 instance, server host will be "0.0.0.0".
 
 4) Run `private/scripts/run-server.sh` to start MongoDB and the Node server.
    
