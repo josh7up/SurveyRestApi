@@ -65,6 +65,13 @@ In order to use the REST API, you will need to include a valid JWT **Authorizati
     _________    _________
     username     minimum 4 character long string
     password     minimum 8 character long string
+    
+  response:
+  
+   {
+     "username": "test",
+     "token": "JWT TOKEN"
+   }
 ```
 
 - Login Existing User
@@ -78,4 +85,27 @@ In order to use the REST API, you will need to include a valid JWT **Authorizati
     _________    _________
     username     minimum 4 character long string
     password     minimum 8 character long string
+    
+  response:
+  
+   {
+     "username": "test",
+     "token": "JWT TOKEN"
+   }
+```
+
+- Get Assessments
+
+```
+  GET  /assessments
+  
+  parameters:
+
+    NAME          VALUE
+    __________    _________
+    surveyName    A valid survey name. The sample survey names are Waking and Beeped.
+    
+  response:
+  
+    TODO - include sample JSON response. Note: if there are no recorded assessments, this endpoint will respond with an empty JSON list.
 ```
