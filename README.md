@@ -2,7 +2,7 @@
 
 A Node.js REST API for survey data. Android client app code that works with this server is available at https://github.com/josh7up/AndroidSurveyFramework
 
-##Installation
+## Installation and Running
 
 1) Run `npm install` to install dependencies
 
@@ -48,4 +48,34 @@ The server should respond with the following:
     "error": "Unauthorized",
     "message": "jwt must be provided"
   }
+```
+
+## Using the API
+
+In order to use the REST API, you will need to include a valid JWT **Authorization** header token in requests. You can get a token by creating a new user with the following API call (note that the associated Android app will do this for you when creating a user. This is for illustrative purposes only):
+
+- Create User
+
+```
+  POST  /users
+  
+  parameters:
+  
+    NAME         VALUE
+    _________    _________
+    username     minimum 4 character long string
+    password     minimum 8 character long string
+```
+
+- Login Existing User
+
+```
+  POST  /users/authenticate
+  
+  parameters:
+  
+    NAME         VALUE
+    _________    _________
+    username     minimum 4 character long string
+    password     minimum 8 character long string
 ```
